@@ -216,7 +216,6 @@
       <SubType>ASPXCodebehind</SubType>
     </Compile>
     <Compile Include="Cliente.vb" />
-    <Compile Include="ClienteDB.vb" />
     <Compile Include="Contact.aspx.designer.vb">
       <DependentUpon>Contact.aspx</DependentUpon>
     </Compile>

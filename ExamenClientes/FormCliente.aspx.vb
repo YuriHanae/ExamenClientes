@@ -1,7 +1,7 @@
 ﻿Public Class FormCliente
     Inherits System.Web.UI.Page
 
-    ' Para almacenar temporalmente el ClienteId que se está editando
+    ' Propiedad para guardar temporalmente el ID del cliente que se está editando
     Protected Property ClienteIdEditando As Integer
         Get
             Dim val = ViewState("ClienteIdEditando")
@@ -12,18 +12,20 @@
         End Set
     End Property
 
+    ' Evento que se ejecuta al cargar la página
     Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
         If Not IsPostBack Then
-            LimpiarFormulario()
+            LimpiarFormulario() ' Solo limpia el formulario la primera vez
         End If
     End Sub
 
+    ' Evento que se ejecuta al hacer clic en el botón Guardar
     Protected Sub btnGuardar_Click(sender As Object, e As EventArgs)
         LblMensaje.Text = ""
         If Not ValidarFormulario() Then Exit Sub
 
         If ClienteIdEditando = 0 Then
-            ' Insertar nuevo cliente
+            ' Si no hay cliente seleccionado, inserta uno nuevo
             Try
                 SqlDataSource1.InsertParameters.Clear()
                 SqlDataSource1.InsertParameters.Add("Nombre", txtNombre.Text.Trim())
@@ -34,6 +36,7 @@
                 LblMensaje.Text = "Cliente guardado exitosamente."
                 LimpiarFormulario()
             Catch ex As Exception
+                ' Manejo de error para claves únicas duplicadas y otros errores
                 If ex.Message.Contains("UNIQUE") AndAlso ex.Message.Contains("Email") Then
                     LblMensaje.Text = "El Email ya está registrado para otro cliente."
                 ElseIf ex.Message.Contains("UNIQUE") AndAlso ex.Message.Contains("Telefono") Then
@@ -43,7 +46,7 @@
                 End If
             End Try
         Else
-            ' Actualizar cliente existente
+            ' Si hay cliente seleccionado, actualiza sus datos
             Try
                 SqlDataSource1.UpdateParameters.Clear()
                 SqlDataSource1.UpdateParameters.Add("Nombre", txtNombre.Text.Trim())
@@ -55,6 +58,7 @@
                 LblMensaje.Text = "Cliente actualizado exitosamente."
                 LimpiarFormulario()
             Catch ex As Exception
+                ' Manejo de error para claves únicas duplicadas y otros errores
                 If ex.Message.Contains("UNIQUE") AndAlso ex.Message.Contains("Email") Then
                     LblMensaje.Text = "El Email ya está registrado para otro cliente."
                 ElseIf ex.Message.Contains("UNIQUE") AndAlso ex.Message.Contains("Telefono") Then
@@ -65,15 +69,17 @@
             End Try
             ClienteIdEditando = 0
         End If
-        GridView1.DataBind()
+        GridView1.DataBind() ' Refresca la tabla de clientes
     End Sub
 
+    ' Evento que se ejecuta al hacer clic en el botón Cancelar
     Protected Sub btnCancelar_Click(sender As Object, e As EventArgs)
         LimpiarFormulario()
-        ClienteIdEditando = 0
+        ClienteIdEditando = 0 ' Quita la selección de cliente
         GridView1.SelectedIndex = -1
     End Sub
 
+    ' Limpia los campos de entrada del formulario y el mensaje
     Protected Sub LimpiarFormulario()
         txtNombre.Text = ""
         txtApellidos.Text = ""
@@ -82,10 +88,12 @@
         LblMensaje.Text = ""
     End Sub
 
+    ' Evento que se ejecuta al seleccionar una fila del GridView
     Protected Sub GridView1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles GridView1.SelectedIndexChanged
         If GridView1.SelectedIndex >= 0 Then
             Dim row As GridViewRow = GridView1.SelectedRow
             ClienteIdEditando = Convert.ToInt32(GridView1.SelectedDataKey.Value)
+            ' Carga los datos de la fila seleccionada en los campos del formulario
             txtNombre.Text = Server.HtmlDecode(row.Cells(2).Text)
             txtApellidos.Text = Server.HtmlDecode(row.Cells(3).Text)
             txtEmail.Text = Server.HtmlDecode(row.Cells(4).Text)
@@ -93,12 +101,14 @@
         End If
     End Sub
 
+    ' Evento que se ejecuta al eliminar una fila del GridView
     Protected Sub GridView1_RowDeleting(sender As Object, e As GridViewDeleteEventArgs) Handles GridView1.RowDeleting
-        ' No necesitas hacer nada extra, el SqlDataSource1 borra el registro automáticamente
+        ' El SqlDataSource1 realiza el borrado automáticamente
         LblMensaje.Text = "Cliente eliminado correctamente."
         LimpiarFormulario()
     End Sub
 
+    ' Valida que los campos obligatorios estén completos y que el email tenga formato válido
     Protected Function ValidarFormulario() As Boolean
         If String.IsNullOrWhiteSpace(txtNombre.Text) OrElse
            String.IsNullOrWhiteSpace(txtApellidos.Text) OrElse
